@@ -1,0 +1,13 @@
+/custom_components/battery_notes
+/custom_components/detailed_hello_world_push
+deps/
+tts/
+.HA_VERSION
+automations.yaml
+configuration.yaml
+home-assistant.log
+home-assistant.log.1
+home-assistant_v2.db
+scenes.yaml
+scripts.yaml
+secrets.yaml
