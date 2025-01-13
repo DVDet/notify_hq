@@ -1,5 +1,6 @@
 /custom_components/battery_notes
 /custom_components/detailed_hello_world_push
+/blueprints
 deps/
 tts/
 .HA_VERSION
