@@ -1,0 +1,25 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "If you need help with the configuration have a look here: https://andrew-codechimp.github.io/HA-Battery-Notes/",
+                "data": {
+                    "association_type": "Association type"
+                },
+                "menu_options": {
+                    "device": "Device (recommended)",
+                    "entity": "Entity"
+                },
+                "title": "Choose your association type"
+            }
+        },
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        }
+    }
+}
