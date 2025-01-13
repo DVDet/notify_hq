@@ -11,3 +11,4 @@ home-assistant_v2.db
 scenes.yaml
 scripts.yaml
 secrets.yaml
+.storage
