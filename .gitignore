@@ -1,5 +1,4 @@
-/custom_components/battery_notes
-/custom_components/detailed_hello_world_push
+/custom_components/*
 /blueprints
 deps/
 tts/
