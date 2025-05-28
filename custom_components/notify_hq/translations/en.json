@@ -21,5 +21,12 @@
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         }
+    },
+    "entity": {
+        "switch": {
+            "allow_notifications": {
+                "name": "Allow Notifications"
+            }
+        }
     }
 }

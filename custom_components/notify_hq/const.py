@@ -91,6 +91,12 @@ ATTR_BATTERY_LAST_REPORTED_DAYS = "battery_last_reported_days"
 ATTR_BATTERY_LAST_REPORTED_LEVEL = "battery_last_reported_level"
 ATTR_PREVIOUS_BATTERY_LEVEL = "previous_battery_level"
 ATTR_BATTERY_THRESHOLD_REMINDER = "reminder"
+CONF_PERSISTENT = "persistent"
+CONF_NAME = "name"
+ATTR_UNIQUE_ID = "unique_id"
+COMPONENT_DOMAIN = "notifyhq"
+CONF_CLASS = "class"
+CONF_INITIAL_VALUE = "initial_value"
 
 SERVICE_BATTERY_REPLACED_SCHEMA = vol.Schema(
     {
