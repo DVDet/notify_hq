@@ -16,4 +16,4 @@ known_devices.yaml
 scenes.yaml
 scripts.yaml
 secrets.yaml
-config/.storage
+.storage/*
