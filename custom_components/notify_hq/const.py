@@ -58,20 +58,6 @@ COMPONENT_DOMAIN = "notifyhq"
 CONF_CLASS = "class"
 CONF_INITIAL_VALUE = "initial_value"
 
-SERVICE_BATTERY_REPLACED_SCHEMA = vol.Schema(
-    {
-        vol.Optional(ATTR_DEVICE_ID): cv.string,
-        vol.Optional(ATTR_SOURCE_ENTITY_ID): cv.string,
-        vol.Optional(SERVICE_DATA_DATE_TIME_REPLACED): cv.datetime,
-    }
-)
-
-SERVICE_CHECK_BATTERY_LAST_REPORTED_SCHEMA = vol.Schema(
-    {
-        vol.Required(SERVICE_DATA_DAYS_LAST_REPORTED): cv.positive_int,
-    }
-)
-
 PLATFORMS: Final = [
     Platform.SWITCH,
 ]

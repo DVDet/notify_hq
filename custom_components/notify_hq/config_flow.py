@@ -3,15 +3,13 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
-from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.const import CONF_DEVICE_ID, CONF_NAME, Integ_opt, Platform
-from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.const import CONF_DEVICE_ID, CONF_NAME, Integ_opt
+from homeassistant.core import split_entity_id
 from homeassistant.helpers import selector
 import homeassistant.helpers.device_registry as dr
 import homeassistant.helpers.entity_registry as er
@@ -47,25 +45,17 @@ ENTITY_SCHEMA_ALL = vol.Schema(
 
 ENTITY_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_SOURCE_ENTITY_ID): selector.EntitySelector(
-            selector.EntitySelectorConfig(
-                domain=[Platform.SENSOR, Platform.BINARY_SENSOR],
-                device_class=SensorDeviceClass.BATTERY,
-            )
-        ),
+        # vol.Required(CONF_SOURCE_ENTITY_ID): selector.EntitySelector(
+        #     selector.EntitySelectorConfig(
+        #         domain=[Platform.SENSOR, Platform.BINARY_SENSOR],
+        #         device_class=SensorDeviceClass.BATTERY,
+        #     )
+        # ),
         vol.Optional(CONF_NAME): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT),
         ),
     }
 )
-
-
-async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from DATA_SCHEMA with values provided by the user.
-    """
-    return {"title": data["host"]}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
