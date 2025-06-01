@@ -39,9 +39,6 @@ class EntityEntry:
     """Battery Notes Entity storage Entry."""
 
     entity_id = attr.ib(type=str, default=None)
-    battery_last_replaced = attr.ib(type=datetime, default=None)
-    battery_last_reported = attr.ib(type=datetime, default=None)
-    battery_last_reported_level = attr.ib(type=float, default=None)
 
 
 class MigratableStore(Store):

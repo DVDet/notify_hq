@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import logging
 
-from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, STATE_CLOSED
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import slugify

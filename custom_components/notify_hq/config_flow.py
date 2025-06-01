@@ -9,44 +9,18 @@ import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_DEVICE_ID, CONF_NAME, Integ_opt, Platform
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import selector
 import homeassistant.helpers.device_registry as dr
 import homeassistant.helpers.entity_registry as er
 
-from .const import (
-    CONF_BATTERY_LOW_TEMPLATE,
-    CONF_BATTERY_LOW_THRESHOLD,
-    CONF_BATTERY_QUANTITY,
-    CONF_BATTERY_TYPE,
-    CONF_DEVICE_NAME,
-    CONF_MANUFACTURER,
-    CONF_MODEL,
-    CONF_MODEL_ID,
-    CONF_SHOW_ALL_DEVICES,
-    CONF_SOURCE_ENTITY_ID,
-    DATA_LIBRARY_UPDATER,
-    DOMAIN,
-    DOMAIN_CONFIG,
-)
-from .hub import Hub
+from .const import CONF_SOURCE_ENTITY_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 CONFIG_VERSION = 1
 
-# This is the schema that used to display the UI to the user. This simple
-# schema has a single required host field, but it could include a number of fields
-# such as username, password etc. See other components in the HA core code for
-# further examples.
-# Note the input displayed to the user will be translated. See the
-# translations/<lang>.json file and strings.json. See here for further information:
-# https://developers.home-assistant.io/docs/config_entries_config_flow_handler/#translations
-# At the time of writing I found the translations created by the scaffold didn't
-# quite work as documented and always gave me the "Lokalise key references" string
-# (in square brackets), rather than the actual translated value. I did not attempt to
-# figure this out or look further into it.
 DATA_SCHEMA = vol.Schema({("host"): str})
 DEVICE_SCHEMA = vol.Schema(
     {
@@ -59,33 +33,8 @@ DEVICE_SCHEMA = vol.Schema(
                 ]
             )
         ),
-        # vol.Optional(CONF_NAME): selector.TextSelector(
-        #     selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT),
-        # ),
     }
 )
-
-# DEVICE_SCHEMA = vol.Schema(
-#     {
-#         vol.Required(CONF_DEVICE_ID): selector.DeviceSelector(
-#             config=selector.DeviceSelectorConfig(
-#                 entity=[
-#                     selector.EntityFilterSelectorConfig(
-#                         domain=Platform.SENSOR,
-#                         device_class=SensorDeviceClass.BATTERY,
-#                     ),
-#                     selector.EntityFilterSelectorConfig(
-#                         domain=Platform.BINARY_SENSOR,
-#                         device_class=SensorDeviceClass.BATTERY,
-#                     ),
-#                 ]
-#             )
-#         ),
-#         vol.Optional(CONF_NAME): selector.TextSelector(
-#             selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT),
-#         ),
-#     }
-# )
 
 ENTITY_SCHEMA_ALL = vol.Schema(
     {
