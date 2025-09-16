@@ -7,16 +7,19 @@ from typing import Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_ID
+from homeassistant.const import CONF_DEVICE_ID, STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import DOMAIN
 from .const import DATA
 from .device import NotifyHqDevice
 from .entity import NotifyHqEntityDescription
+
+CONF_INITIAL = "initial"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -81,11 +84,11 @@ async def async_setup_entry(
     )
 
 
-class NotifyHqSwitch(SwitchEntity):
+class NotifyHqSwitch(SwitchEntity, RestoreEntity):
     """Representation of a demo switch."""
 
     _attr_should_poll = False
-    _attr_is_on = False
+    # _attr_is_on = False
 
     def __init__(
         self,
@@ -111,17 +114,24 @@ class NotifyHqSwitch(SwitchEntity):
                 identifiers=device.identifiers,
             )
 
-    @property
-    def is_on(self) -> bool:
-        """Return True if device is on."""
-        return self._attr_is_on
+    async def async_added_to_hass(self) -> None:
+        """Call when entity about to be added to hass."""
+        # Don't restore if we got an initial value.
+        await super().async_added_to_hass()
 
-    def turn_on(self, **kwargs: Any) -> None:
-        """Turn the switch on."""
+        state = await self.async_get_last_state()
+        self._attr_is_on = state is not None and state.state == STATE_ON
+
+    @callback
+    def _schedule_immediate_update(self):
+        self.async_schedule_update_ha_state(True)
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the entity on."""
         self._attr_is_on = True
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
-    def turn_off(self, **kwargs: Any) -> None:
-        """Turn the device off."""
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the entity off."""
         self._attr_is_on = False
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
