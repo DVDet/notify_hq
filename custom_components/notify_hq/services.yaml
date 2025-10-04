@@ -1,0 +1,22 @@
+notify:
+  name: "Send HQ Notification"
+  description: "Send a notification to all notify.* services that are enabled via their switches. Uses category and zone-aware alert levels configured in the integration options."
+  fields:
+    message:
+      name: Message
+      description: "Notification message to send"
+      required: true
+      selector:
+        text:
+    title:
+      name: Title
+      description: "Optional notification title"
+      required: false
+      selector:
+        text:
+    category:
+      name: Category
+      description: "Optional notification category defined in Notify HQ options"
+      required: false
+      selector:
+        text:

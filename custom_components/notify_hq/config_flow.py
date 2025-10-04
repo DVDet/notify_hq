@@ -1,150 +1,115 @@
-"""Config flow for Hello World integration."""
-
+"""Config flow for Notify HQ integration with categories and zone-aware alert levels."""
 from __future__ import annotations
 
 import logging
-
 import voluptuous as vol
+from typing import Dict, List
 
-from homeassistant import config_entries, exceptions
-from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.const import CONF_DEVICE_ID, CONF_NAME, Integ_opt
-from homeassistant.core import split_entity_id
-from homeassistant.helpers import selector
-import homeassistant.helpers.device_registry as dr
-import homeassistant.helpers.entity_registry as er
+from homeassistant import config_entries
+from homeassistant.core import callback
+from homeassistant.helpers import entity_registry
 
-from .const import CONF_SOURCE_ENTITY_ID, DOMAIN
+from .const import DOMAIN, ALERT_LEVELS, DEFAULT_ALERT_LEVEL
 
 _LOGGER = logging.getLogger(__name__)
-CONFIG_VERSION = 1
-
-DATA_SCHEMA = vol.Schema({("host"): str})
-DEVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_DEVICE_ID): selector.DeviceSelector(
-            config=selector.DeviceFilterSelectorConfig(
-                entity=[
-                    selector.EntityFilterSelectorConfig(
-                        integration=Integ_opt.MOBILE_APP,
-                    ),
-                ]
-            )
-        ),
-    }
-)
-
-ENTITY_SCHEMA_ALL = vol.Schema(
-    {
-        vol.Required(CONF_SOURCE_ENTITY_ID): selector.EntitySelector(),
-        vol.Optional(CONF_NAME): selector.TextSelector(
-            selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT),
-        ),
-    }
-)
-
-ENTITY_SCHEMA = vol.Schema(
-    {
-        # vol.Required(CONF_SOURCE_ENTITY_ID): selector.EntitySelector(
-        #     selector.EntitySelectorConfig(
-        #         domain=[Platform.SENSOR, Platform.BINARY_SENSOR],
-        #         device_class=SensorDeviceClass.BATTERY,
-        #     )
-        # ),
-        vol.Optional(CONF_NAME): selector.TextSelector(
-            selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT),
-        ),
-    }
-)
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Hello World."""
+def _get_zone_names(hass) -> List[str]:
+    """
+    Return a list of zone keys to use in the options UI.
+    We'll return short names like 'home', 'office', or zone entity_id suffix without 'zone.'.
+    """
+    zone_names = []
+    for state in hass.states.async_all("zone"):
+        # state.entity_id is 'zone.home' or 'zone.office'
+        eid = state.entity_id
+        if eid and eid.startswith("zone."):
+            zone_names.append(eid.split(".", 1)[1])
+    # Ensure 'home' exists as a sensible default
+    if "home" not in zone_names:
+        zone_names.insert(0, "home")
+    return zone_names
 
-    VERSION = CONFIG_VERSION
 
-    data: dict
+class NotifyHQConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle the config flow for Notify HQ."""
 
-    async def async_step_user(
-        self,
-        user_input: dict | None = None,
-    ) -> ConfigFlowResult:
-        # pylint: disable=unused-argument
-        """Handle a flow initialized by the user."""
+    VERSION = 3
 
-        return self.async_show_menu(step_id="user", menu_options=["device", "entity"])
-
-    async def async_step_device(
-        self,
-        user_input: dict | None = None,
-    ) -> ConfigFlowResult:
-        """Handle a flow for a device or discovery."""
-        errors = {}
+    async def async_step_user(self, user_input=None):
+        """Initial step for creating the integration (no configuration required)."""
         if user_input is not None:
-            try:
-                self.data = user_input
+            await self.async_set_unique_id(DOMAIN)
+            self._abort_if_unique_id_configured()
+            return self.async_create_entry(title="Notify HQ", data={})
+        return self.async_show_form(step_id="user", data_schema=vol.Schema({}))
 
-                source_entity_id = self.data.get(CONF_SOURCE_ENTITY_ID, None)
-                device_id = self.data.get(CONF_DEVICE_ID, None)
-
-                if source_entity_id:
-                    entity_registry = er.async_get(self.hass)
-                    entity_entry = entity_registry.async_get(source_entity_id)
-                    source_entity_domain, source_object_id = split_entity_id(
-                        source_entity_id
-                    )
-                    if entity_entry:
-                        entity_unique_id = (
-                            entity_entry.unique_id or entity_entry.entity_id
-                        )
-                    else:
-                        entity_unique_id = source_object_id
-                    unique_id = f"nhq_{entity_unique_id}"
-                else:
-                    device_registry = dr.async_get(self.hass)
-                    device_entry = device_registry.async_get(device_id)
-                    unique_id = f"nhq_{device_id}"
-                    self.data.update({"device_name": device_entry.name})
-
-                await self.async_set_unique_id(unique_id)
-                self._abort_if_unique_id_configured()
-
-                if CONF_NAME in self.data:
-                    title = self.data.get(CONF_NAME)
-                elif source_entity_id and entity_entry:
-                    title = entity_entry.name or entity_entry.original_name
-                else:
-                    assert device_entry
-                    title = device_entry.name_by_user or device_entry.name
-
-                return self.async_create_entry(
-                    title=str(title),
-                    data=self.data,
-                )
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidHost:
-                # The error string is set here, and should be translated.
-                # This example does not currently cover translations, see the
-                # comments on `DATA_SCHEMA` for further details.
-                # Set the error on the `host` field, not the entire form.
-                errors["host"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-
-        # If there is no user input or there were errors, show the form again, including any errors that were found with the input.
-        return self.async_show_form(
-            step_id="device",
-            data_schema=DEVICE_SCHEMA,
-            errors=errors,
-            last_step=False,
-        )
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        return NotifyHQOptionsFlowHandler(config_entry)
 
 
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
+class NotifyHQOptionsFlowHandler(config_entries.OptionsFlow):
+    """Options flow for Notify HQ - configure categories and per-zone alert levels."""
 
+    def __init__(self, config_entry: config_entries.ConfigEntry):
+        self.config_entry = config_entry
+        self._categories: List[str] = []
+        self._alert_levels: Dict[str, Dict[str, str]] = config_entry.options.get("alert_levels", {})
 
-class InvalidHost(exceptions.HomeAssistantError):
-    """Error to indicate there is an invalid hostname."""
+    async def async_step_init(self, user_input=None):
+        """Step 1: ask for a comma-separated list of categories."""
+        if user_input is not None:
+            cats = [c.strip() for c in user_input.get("categories", "").split(",") if c.strip()]
+            self._categories = cats
+            return await self.async_step_zone_levels()
+
+        categories_csv = self.config_entry.options.get("categories", "")
+        data_schema = vol.Schema({
+            vol.Optional("categories", default=categories_csv): str
+        })
+        return self.async_show_form(step_id="init", data_schema=data_schema)
+
+    async def async_step_zone_levels(self, user_input=None):
+        """Step 2: present a dropdown for every category × zone to pick an alert level."""
+        hass = self.hass
+        zone_names = _get_zone_names(hass)
+
+        if user_input is not None:
+            # Build alert_levels structure
+            alert_levels: Dict[str, Dict[str, str]] = {}
+            for cat in self._categories:
+                cat_key_map: Dict[str, str] = {}
+                for zone in zone_names:
+                    field_name = f"level__{cat}__{zone}"
+                    # default to 'active' if not provided
+                    selected = user_input.get(field_name, DEFAULT_ALERT_LEVEL)
+                    cat_key_map[zone] = selected
+                alert_levels[cat] = cat_key_map
+
+            options = {
+                "categories": ",".join(self._categories),
+                "alert_levels": alert_levels,
+            }
+
+            # Persist options and trigger reload so switches update live
+            await self.hass.config_entries.async_update_entry(self.config_entry, options=options)
+            await self.hass.config_entries.async_reload(self.config_entry.entry_id)
+
+            return self.async_create_entry(title="", data=options)
+
+        # Build schema dynamically
+        schema_dict = {}
+        # If there are no categories, allow user to save empty
+        if not self._categories:
+            return self.async_show_form(step_id="zone_levels", data_schema=vol.Schema({}))
+
+        for cat in self._categories:
+            # existing levels for this category
+            existing = self._alert_levels.get(cat, {})
+            for zone in zone_names:
+                default = existing.get(zone, DEFAULT_ALERT_LEVEL)
+                schema_dict[vol.Optional(f"level__{cat}__{zone}", default=default)] = vol.In(ALERT_LEVELS)
+
+        return self.async_show_form(step_id="zone_levels", data_schema=vol.Schema(schema_dict))
