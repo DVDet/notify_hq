@@ -17,6 +17,6 @@ notify:
     category:
       name: Category
       description: "Optional notification category defined in Notify HQ options"
-      required: false
+      required: true
       selector:
         text:
