@@ -20,3 +20,13 @@ notify:
       required: true
       selector:
         text:
+    actions:
+      description: "Optional list of actions for mobile notifications"
+      selector:
+        template:
+      example:
+        - action: "OPEN_APP"
+          title: "Open App"
+        - action: "SNOOZE"
+          title: "Snooze"
+      required: false

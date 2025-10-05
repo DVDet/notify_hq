@@ -1,35 +1,34 @@
 """Notify HQ integration."""
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import async_get as dr_async_get
 
+from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry
 from .const import DOMAIN
-from .notify_service import async_setup_notify_service
+from .notify_service import async_setup_entry as notify_setup_entry, async_unload_entry as notify_unload_entry
 
 PLATFORMS = ["switch", "select"]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Set up Notify HQ from a config entry (one entry per category)."""
-    hass.data.setdefault(DOMAIN, {})
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Notify HQ from a config entry."""
 
-    category_name = entry.title  # Each entry title = category
-    dev_reg = dr_async_get(hass)
+    # Set up the notify service
+    await notify_setup_entry(hass, entry)
 
-    # Create the category device if it does not exist
-    dev_reg.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, category_name)},
-        manufacturer="Notify HQ",
-        name=category_name,
-        model="Notification Category",
-    )
-
-    # Forward platforms
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    # Register the notify service once
-    if DOMAIN not in hass.data or not hass.data.get(f"{DOMAIN}_service_registered"):
-        await async_setup_notify_service(hass)
-        hass.data[f"{DOMAIN}_service_registered"] = True
+    # Forward entry setup to platforms
+    for platform in PLATFORMS:
+        await hass.config_entries.async_forward_entry_setup(entry, platform)
 
     return True
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+
+    # Unload notify service
+    await notify_unload_entry(hass, entry)
+
+    # Unload platforms
+    unload_ok = all(
+        await hass.config_entries.async_forward_entry_unload(entry, platform)
+        for platform in PLATFORMS
+    )
+
+    return unload_ok

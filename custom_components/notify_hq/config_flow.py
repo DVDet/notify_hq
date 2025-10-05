@@ -1,30 +1,38 @@
 """Config flow for Notify HQ."""
-from __future__ import annotations
+
 import voluptuous as vol
 from homeassistant import config_entries
 from .const import DOMAIN
 
 class NotifyHQConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle Notify HQ config flow."""
+    """Handle a config flow for Notify HQ."""
 
     VERSION = 1
 
     async def async_step_user(self, user_input=None):
+        """Step when the user adds a new category."""
         errors = {}
 
         if user_input is not None:
-            category_name = user_input["category_name"].strip()
-
-            # Check if a config entry for this category already exists
+            category = user_input["category"].strip()
+            # Check if this category is already configured
             for entry in self._async_current_entries():
-                if entry.title == category_name:
-                    return self.async_abort(reason="category_exists")
+                if entry.title.lower() == category.lower():
+                    errors["category"] = "already_configured"
+                    break
 
-            # Create a new entry (each category is its own entry)
-            return self.async_create_entry(
-                title=category_name,
-                data={},
-            )
+            if not errors:
+                return self.async_create_entry(
+                    title=category,
+                    data={"category": category}
+                )
 
-        data_schema = vol.Schema({vol.Required("category_name"): str})
-        return self.async_show_form(step_id="user", data_schema=data_schema, errors=errors)
+        schema = vol.Schema({
+            vol.Required("category", description="Enter notification category"): str
+        })
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=schema,
+            errors=errors
+        )
